@@ -1,0 +1,15 @@
+target/
+data/
+
+# IDE
+.metals
+.bloop
+.vscode
+
+# FILES
+*.tar.gz
+
+# LOGS
+logs/
+
+
