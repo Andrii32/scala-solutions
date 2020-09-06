@@ -103,16 +103,8 @@ object Executor{
 
     def execute(x: Program): Prog = {
         x.intcodes(x.index.v) match {
-            case 1  => {
-                val v = code1(x)
-                println(v)
-                execute(v)
-            }
-            case 2  => {
-                val v = code2(x)
-                println(v)
-                execute(v)
-            }
+            case 1  => execute(code1(x))
+            case 2  => execute(code2(x))
             case 99 => Halt(intcodes=x.intcodes, index=x.index)
         }
     }
@@ -131,12 +123,8 @@ object day_2{
             .setValueByAddress(Address(2), Value(2))
         Executor.execute(program) match {
             case p: Program => throw new NotImplementedError
-            case p: Halt => {
-                println(p)
-                p.getValueByAddress(Address(0)).v
-            }
+            case p: Halt => p.getValueByAddress(Address(0)).v
         }
     }
-
 
 }
