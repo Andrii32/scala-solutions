@@ -1,5 +1,7 @@
 package adventofcode.year2019
 
+import scala.annotation.tailrec
+
 case class Index(v: Int)
 case class Address(v: Int)
 case class Value(v: Int)
@@ -55,7 +57,7 @@ case class Halt(intcodes: Vector[Int], index: Index = Index(0))    extends Prog
 object Halt{
 
     implicit class HaltOps(val p: Halt) {
-        def getValueByAddress(address: Address): Value = Value(p.intcodes(address.v))
+        def output: Value = Value(p.intcodes(Address(0).v))
     }
 
 }
@@ -64,6 +66,12 @@ object Program{
 
     def apply(xs: List[Int]): Program =
         Program(xs.toVector)
+
+    def apply(xs: List[Int], noun: Int, verb: Int): Program =
+        Program(xs.toVector)
+            .setValueByAddress(Address(1), Value(noun))
+            .setValueByAddress(Address(2), Value(verb))
+
 
     implicit class ProgramOps(val p: Program) {
 
@@ -101,6 +109,7 @@ object Executor{
         Program(p.intcodes, index=p.index + 4)
     }
 
+    @tailrec
     def execute(x: Program): Prog = {
         x.intcodes(x.index.v) match {
             case 1  => execute(code1(x))
@@ -123,8 +132,25 @@ object day_2{
             .setValueByAddress(Address(2), Value(2))
         Executor.execute(program) match {
             case p: Program => throw new NotImplementedError
-            case p: Halt => p.getValueByAddress(Address(0)).v
+            case p: Halt => p.output.v
         }
+    }
+
+    def task2(vals: Iterator[String]): Int = {
+        val opcodes = vals.next().split(',').toList.map(_.toInt)
+        val desiredOutput = 19690720
+
+        (for (noun <- 0 to 99; verb <- 0 to 99) yield (noun, verb))
+            .find{ case (noun, verb) =>
+                Executor.execute(Program(opcodes, noun, verb)) match {
+                    case x: Halt if x.output.v == desiredOutput => true
+                    case _ => false
+                }
+            }
+            .map { case (noun, verb) => 100 * noun + verb }
+            .get
+
+
     }
 
 }

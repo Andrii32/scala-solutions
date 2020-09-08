@@ -14,6 +14,7 @@ object solutions{
     def day2() = {
         println("DAY 2")
         println(day_2.task1(Source.fromResource("adventofcode/year2019/day2").getLines))
+        println(day_2.task2(Source.fromResource("adventofcode/year2019/day2").getLines))
     }
 
 }
