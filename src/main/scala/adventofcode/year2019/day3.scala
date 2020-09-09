@@ -75,7 +75,7 @@ object Segment{
         }
 
     private def intersectionPerpendicular(y: Int, xs: Tuple2[Int, Int], x:Int, ys: Tuple2[Int, Int]): Option[Point] =
-        if ((List(xs._1, xs._2).min <= x) && (x <= List(xs._1, xs._2).max) &&  (List(ys._1, ys._2).min <= y) && (y <= List(ys._1, ys._2).max)) {
+        if ((List(xs._1, xs._2).min <= x) && (x <= List(xs._1, xs._2).max) && (List(ys._1, ys._2).min <= y) && (y <= List(ys._1, ys._2).max)) {
             Some(Point(x, y))
         } else {
             None
