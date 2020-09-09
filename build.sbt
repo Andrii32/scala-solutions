@@ -14,6 +14,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "solutions",
     libraryDependencies += scalaTest % Test,
-    libraryDependencies += simulacrum
+    libraryDependencies += simulacrum,
+    libraryDependencies += catsCore
   )
 
