@@ -30,13 +30,35 @@ sealed trait Intersection
 case class Point(x: Int, y: Int) extends Intersection
 sealed trait Segment extends Intersection {
     def toPoints: List[Point]
+    def p1: Point
+    def p2: Point
+    def length: Int
+    def v: Int
+    def vs: List[Int]
+    def split(p: Point): Tuple2[Segment, Segment]
 }
 
 case class SegmentVer(x: Int, ys: Tuple2[Int, Int])  extends Segment{
     def toPoints: List[Point] = ys.toList.map(y => Point(x, y))
+    def p1: Point = Point(x=x, y=ys._1)
+    def p2: Point = Point(x=x, y=ys._2)
+    def length: Int = (Math.max(ys._1, ys._2) - Math.min(ys._1, ys._2)).abs
+    def v: Int = x
+    def vs: List[Int] = ys.toList
+    def split(p: Point): Tuple2[SegmentVer, SegmentVer] =
+        Tuple2(SegmentVer(x, Tuple2(ys._1, p.y)), SegmentVer(x, Tuple2(p.y, ys._2)))
 }
+
 case class SegmentHor(y: Int, xs: Tuple2[Int, Int])  extends Segment{
     def toPoints: List[Point] = xs.toList.map(x => Point(x, y))
+    def p1: Point = Point(x=xs._1, y=y)
+    def p2: Point = Point(x=xs._2, y=y)
+    def length: Int = (Math.max(xs._1, xs._2) - Math.min(xs._1, xs._2)).abs
+    def v: Int = y
+    def vs: List[Int] = xs.toList
+    def split(p: Point): Tuple2[SegmentHor, SegmentHor] =
+        Tuple2(SegmentHor(y, Tuple2(xs._1, p.x)), SegmentHor(y, Tuple2(p.x, xs._2)))
+
 }
 
 case class Step(point: Point, n: Int)
@@ -58,12 +80,10 @@ object Point{
 object Segment{
 
     def apply(a: Point, b:Point): Segment = (a, b) match {
-        case (Point(x1, y1), Point(x2, y2)) if (x1 == x2 && y1 == y2) =>
-            throw new IllegalArgumentException("0 length segment is a Point")
         case (Point(x1, y1), Point(x2, y2)) if x1 == x2 =>
-            SegmentVer(x=x1, Tuple2(Math.min(y1, y2), Math.max(y1, y2)))
+            SegmentVer(x=x1, Tuple2(y1, y2))
         case (Point(x1, y1), Point(x2, y2)) if y1 == y2 =>
-            SegmentHor(y=y1, Tuple2(Math.min(x1, x2), Math.max(x1, x2)))
+            SegmentHor(y=y1, Tuple2(x1, x2))
         case _ => throw new IllegalArgumentException()
     }
 
@@ -114,13 +134,50 @@ object day_3{
         val secPathSegments = secPathPoints.zip(secPathPoints.drop(1)).map{case (p1, p2) => Segment(p1, p2)}
 
         (for { x <- fstPathSegments; y <- secPathSegments } yield (x, y)).drop(1)
-            .map{case (x, y) => Segment.intersection(x, y)}.flatten
+            .map{case (x, y) => Segment.intersection(x, y)}
+            .flatten
             .flatMap(x => x match {
                 case p: Point   => List(p)
                 case s: Segment => s.toPoints
             })
             .map(p => Point.manhattanDistance(Point(0 ,0), p))
             .min
+    }
+
+    def task2(vals: Iterator[String]): Int = {
+        val fst :: sec :: Nil = vals.take(2)
+            .map(_.split(','))
+            .map(_.toList.map(Vec.apply)).toList
+
+        val fstPathSegments = fst.scanLeft(
+            Tuple2(Segment(Point(0, 0), Point(0, 0)), 0)
+        )(
+            (s: Tuple2[Segment, Int], d: Vec) => {
+                val newSegment = Segment(s._1.p2, Point.move(s._1.p2, d))
+                Tuple2(newSegment, s._2 + newSegment.length)
+            }
+        )
+
+        val secPathSegments = sec.scanLeft(
+            Tuple2(Segment(Point(0, 0), Point(0, 0)), 0)
+        )(
+            (s: Tuple2[Segment, Int], d: Vec) => {
+                val newSegment = Segment(s._1.p2, Point.move(s._1.p2, d))
+                Tuple2(newSegment, s._2 + newSegment.length)
+            }
+        )
+
+        (for { x <- fstPathSegments; y <- secPathSegments } yield (x, y))
+            .mapFilter{case ((s1, d1), (s2, d2)) => Segment.intersection(s1, s2)
+                .map(intersection => ((s1, d1), (s2, d2), intersection))}
+            .filter{case ((s1, _), (s2, _), _) => (List(s1.v, s2.v) ::: s1.vs ::: s2.vs).forall(_ != 0)}
+            .map{case ((s1, d1), (s2, d2), i) => i match {
+                    case p: Point   => {
+                        d1 - s1.split(p)._2.length + d2 - s2.split(p)._2.length
+                    }
+                    case s: Segment => throw new NotImplementedError()}}
+            .min
+
     }
 
 }
