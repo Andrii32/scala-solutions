@@ -6,4 +6,5 @@ object Solutions extends App {
   day1()
   day2()
   day3()
+  day4()
 }
